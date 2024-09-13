@@ -5,10 +5,12 @@ import {
   FormControl,
   FormErrorMessage,
   FormLabel,
+  HStack,
   IconButton,
   Input,
   Radio,
   RadioGroup,
+  Select,
   Stack,
   Text,
   VStack,
@@ -18,6 +20,7 @@ import { useFormik } from "formik";
 import { useState } from "react";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faCircleChevronLeft } from "@fortawesome/free-solid-svg-icons";
+import { useAlertContext } from "../context/alertContext";
 
 const reservationSchemaStep1 = Yup.object({
   date: Yup.string().required("Date is required."),
@@ -27,18 +30,25 @@ const reservationSchemaStep1 = Yup.object({
   seating: Yup.string().required("Seating selection is required."),
 });
 
+const phoneRegExp =
+  /^((\\+[1-9]{1,4}[ \\-]*)|(\\([0-9]{2,3}\\)[ \\-]*)|([0-9]{2,4})[ \\-]*)*?[0-9]{3,4}?[ \\-]*[0-9]{3,4}?$/;
+
 const reservationSchemaStep2 = Yup.object({
   firstName: Yup.string().required("First Name is required."),
   lastName: Yup.string().required("Last Name is required."),
-  phone: Yup.string().required("Phone is required."),
+  phone: Yup.string()
+    .min(10, "Phone number is at least 10 digit")
+    .matches(phoneRegExp, "Phone number is not valid")
+    .required("Phone is required."),
   email: Yup.string()
     .email("Invalid email format")
     .required("Email is required."),
   address: Yup.string().required("Address is required."),
 });
 
-const Booking = () => {
+const BookingForm = (props) => {
   const [step, setStep] = useState(1);
+  const { onOpen } = useAlertContext();
 
   const formikStep1 = useFormik({
     initialValues: {
@@ -66,7 +76,11 @@ const Booking = () => {
         ...formikStep1.values,
         ...values,
       });
-      alert("Reservation submitted successfully!");
+      formikStep2.resetForm();
+      onOpen("success", {
+        title: "Congratulations!",
+        body: "Reservation submitted successfully!",
+      });
     },
   });
 
@@ -79,41 +93,52 @@ const Booking = () => {
           </Text>
           {step === 1 ? (
             <form onSubmit={formikStep1.handleSubmit}>
-              <VStack align="stretch" spacing={5}>
-                <FormControl
-                  isInvalid={
-                    formikStep1.touched.date && !!formikStep1.errors.date
-                  }
-                >
-                  <FormLabel htmlFor="date">Date:</FormLabel>
-                  <Input
-                    type="date"
-                    id="date"
-                    name="date"
-                    rounded="10px"
-                    bg="highlight1"
-                    {...formikStep1.getFieldProps("date")}
-                  />
-                  <FormErrorMessage>{formikStep1.errors.date}</FormErrorMessage>
-                </FormControl>
+              <VStack align="stretch" spacing={7}>
+                <HStack>
+                  <FormControl
+                    isInvalid={
+                      formikStep1.touched.date && !!formikStep1.errors.date
+                    }
+                  >
+                    <FormLabel htmlFor="date">Date:</FormLabel>
+                    <Input
+                      type="date"
+                      id="date"
+                      name="date"
+                      rounded="10px"
+                      bg="highlight1"
+                      {...formikStep1.getFieldProps("date")}
+                    />
+                    <FormErrorMessage position="absolute" mt={1}>
+                      {formikStep1.errors.date}
+                    </FormErrorMessage>
+                  </FormControl>
 
-                <FormControl
-                  isInvalid={
-                    formikStep1.touched.time && !!formikStep1.errors.time
-                  }
-                >
-                  <FormLabel htmlFor="time">Time:</FormLabel>
-                  <Input
-                    type="time"
-                    id="time"
-                    name="time"
-                    rounded="10px"
-                    bg="highlight1"
-                    {...formikStep1.getFieldProps("time")}
-                  />
-                  <FormErrorMessage>{formikStep1.errors.time}</FormErrorMessage>
-                </FormControl>
-
+                  <FormControl
+                    isInvalid={
+                      formikStep1.touched.time && !!formikStep1.errors.time
+                    }
+                  >
+                    <FormLabel htmlFor="time">Time:</FormLabel>
+                    <Select
+                      id="time"
+                      name="time"
+                      rounded="10px"
+                      bg="highlight1"
+                      {...formikStep1.getFieldProps("time")}
+                    >
+                      <option value="">Select Time</option>
+                      {props.availableTimes.map((time) => (
+                        <option key={time} value={time}>
+                          {time}
+                        </option>
+                      ))}
+                    </Select>
+                    <FormErrorMessage position="absolute" mt={1}>
+                      {formikStep1.errors.time}
+                    </FormErrorMessage>
+                  </FormControl>
+                </HStack>
                 <FormControl
                   isInvalid={
                     formikStep1.touched.people && !!formikStep1.errors.people
@@ -128,7 +153,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep1.getFieldProps("people")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep1.errors.people}
                   </FormErrorMessage>
                 </FormControl>
@@ -163,7 +188,7 @@ const Booking = () => {
                       <Radio value="outdoor">Outdoor</Radio>
                     </Stack>
                   </RadioGroup>
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep1.errors.seating}
                   </FormErrorMessage>
                 </FormControl>
@@ -221,7 +246,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep2.getFieldProps("firstName")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep2.errors.firstName}
                   </FormErrorMessage>
                 </FormControl>
@@ -240,7 +265,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep2.getFieldProps("lastName")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep2.errors.lastName}
                   </FormErrorMessage>
                 </FormControl>
@@ -258,7 +283,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep2.getFieldProps("phone")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep2.errors.phone}
                   </FormErrorMessage>
                 </FormControl>
@@ -276,7 +301,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep2.getFieldProps("email")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep2.errors.email}
                   </FormErrorMessage>
                 </FormControl>
@@ -294,7 +319,7 @@ const Booking = () => {
                     bg="highlight1"
                     {...formikStep2.getFieldProps("address")}
                   />
-                  <FormErrorMessage>
+                  <FormErrorMessage position="absolute" mt={1}>
                     {formikStep2.errors.address}
                   </FormErrorMessage>
                 </FormControl>
@@ -306,12 +331,13 @@ const Booking = () => {
                   fontSize="lg"
                   px={10}
                   py={2}
+                  mt={5}
                   rounded="md"
                   transition="all 0.3s"
                   _hover={{ bg: "secondary1", color: "highlight2" }}
                   shadow="md"
                 >
-                  Submit Reservation
+                  Reserve
                 </Button>
               </VStack>
             </form>
@@ -322,4 +348,4 @@ const Booking = () => {
   );
 };
 
-export default Booking;
+export default BookingForm;

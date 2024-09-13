@@ -1,7 +1,8 @@
 import { Box, Container, HStack, Image, Text } from "@chakra-ui/react";
-import Booking from "./component/Booking";
+import BookingForm from "./component/BookingForm";
 
 const ReservationForm = () => {
+  const availableTimes = ["12:00", "12:30", "13:00", "13:30", "14:00"];
   return (
     <>
       <Box as="section" pt={10} pb={20} bg="primary1">
@@ -43,7 +44,7 @@ const ReservationForm = () => {
       </Box>
       <Box as="section" pt={10} pb={20} bg="highlight1">
         <Container maxW="container.xl">
-          <Booking />
+          <BookingForm availableTimes={availableTimes} />
         </Container>
       </Box>
     </>
